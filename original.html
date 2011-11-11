@@ -1,0 +1,633 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<html>
+<head>
+	<title>Untitled</title>
+	
+	<style>
+	
+	BODY
+	  {
+	    overflow:hidden;
+	  }
+	
+    .handle 
+	  {
+		float: left;
+		width: 28px;
+		height: 22px;
+		text-align: bottom;
+		font-family: Verdana;
+		font-size: 9px;
+		font-weight: normal;
+		cursor: pointer;
+		cursor: hand;
+	  }
+	  
+	.handleText
+	  {
+	    min-height: 22px;
+		text-align: left;
+		margin-left: 34px;
+        word-wrap: break-word;
+	  }
+
+	.baseItem
+	  {
+	    font-family: Lucida,Verdana;
+		font-size: 12px;
+		font-weight: bold;
+		color: #393939;
+		padding: 2px;
+		clear: left;
+		min-height: 22px;
+	  }
+	  
+	.selectedItem
+	  {
+	    font-family: Lucida,Verdana;
+		font-size: 12px;
+		font-weight: bold;
+		color: #000000;
+		padding: 2px;
+		background-color: #ccffff;
+		height: 100%;
+		min-height: 22px;
+	  }
+  
+	.itemEditBox
+	  {
+		z-index: 1000;
+		background-color: yellow;
+		width: inherit;
+        height: inherit;
+		border: 0px;
+		margin: 0px;
+		color: #ff0000;
+	    font-family: Lucida,Verdana;
+		font-size: 12px;
+		font-weight: bold;
+		overflow: auto;
+		padding: 2px;
+	  }  
+	  
+	.itemSeparator
+	  {
+	    width: 100%;
+		height: 4px;
+		cursor: pointer;
+		cursor: hand;
+		clear: left;
+	  }
+	  
+	.fileIcon
+	  {
+	    float: right;
+		background-image: url(images/file_icon.png);
+		width: 11px;
+		height: 11px;
+	  }
+	
+	</style>
+
+	<script language="Javascript" src="scripts/LinkedList.js"></script>
+	<script language="Javascript" src="scripts/XMLHTTP.js"></script>
+	<script language="Javascript" src="scripts/Keyboard.js"></script>
+	<script language="Javascript" src="scripts/System.js"></script>
+	<script language="Javascript">
+	
+	var columnAList = new Object(); 
+
+	var container = '';
+	var itemCount = -1;
+	var separatorCount = 0;
+	var curType; // the last valid TYPE attribute in stream
+	var curName; // the last valid NAME attribute in stream
+	var curValue; // the last valid VALUE attribute in stream
+		
+	var curListOb = null; // on element creation, sends ob listing el properties to List
+		
+	var curTxt; // points to last textNode created for curEl
+	
+	function init()
+	  {
+	    System.register('LinkedList');
+	    System.register('XMLHTTP');
+		System.register('Keyboard');
+		
+		System.Queue.start();
+		
+	    //System.add(System.XMLHTTP.build('XML','/evalform?code=::agenda::views::view1::viewSections::viewSection0 asXML',fileParse));	
+
+		document.onmouseup = dropItem;
+		
+		columnAList = System.LinkedList.build('List');
+        run();
+	  }
+	
+	function run()
+	  {
+	    getView();
+		
+		System.Keyboard.defineKey(27,clearEditor);
+		System.Keyboard.defineKey(192,showInfo);
+	    System.Keyboard.start();
+	  }
+	
+	function getView()
+	  {
+	    // load the data
+	    //System.Queue.add(System.XMLHTTP.build('XML','/evalform?code=::agenda::items asXML',addItemList));	
+		
+		//var nL = System.Queue.add({main:function(){ return true;}});
+	    //System.Queue.setFailsafe(nL,2000);
+		
+        System.D_addMMoveHandler(moveItem);
+		makeContainer();
+		
+				curListOb = new Object();
+				  
+				curListOb.className = 'baseItem';
+				curListOb.elType = 'ITEM';
+				curListOb.elID = 'sandro'; // the id of the item
+				curListOb.elCategories = ''; // appended to if item is attached to multiple categories; see below		
+		        curListOb.elText = 'hithere';
+					makeSeparator();
+                    makeItem();	
+					
+					
+				curListOb = new Object();
+				  
+				curListOb.className = 'baseItem';
+				curListOb.elType = 'ITEM';
+				curListOb.elID = 'sandro2'; // the id of the item
+				curListOb.elCategories = ''; // appended to if item is attached to multiple categories; see below		
+		        curListOb.elText = 'dfdf';
+					makeSeparator();
+                    makeItem();	
+					
+					
+				curListOb = new Object();
+				  
+				curListOb.className = 'baseItem';
+				curListOb.elType = 'ITEM';
+				curListOb.elID = 'sandro3'; // the id of the item
+				curListOb.elCategories = ''; // appended to if item is attached to multiple categories; see below		
+		        curListOb.elText = 'dfd';
+					makeSeparator();
+                    makeItem();	
+					
+					
+					document.body.appendChild(container);
+	  }
+	
+/*	
+	function addItemList(t)
+      {
+        var retOb = new Object();
+	    retOb.serialized = System.XMLHTTP.serialize(t);	
+	    retOb.document = System.XMLHTTP.DocumentObject();        
+	    retOb.document.loadXML(retOb.serialized);	
+        var dom = retOb.document;
+		
+        // get all the function elements
+	    var els = dom.document.getElementsByTagName('obj');
+
+		System.D_addMMoveHandler(moveItem);
+		
+		// create the column container
+		makeContainer();
+		
+		// parse the XML
+	    for(x=0; x<els.length; x++)
+	      {		  
+			try
+			  {
+	            curType = els[x].attributes.getNamedItem('type').value || curType;
+			  } catch(e) {;}
+			  
+			try
+			  {
+	            curName = els[x].attributes.getNamedItem('name').value || curName;
+			  } catch(e) {;}
+			  
+			try
+			  {
+		        curValue = els[x].attributes.getNamedItem('value').value || curValue
+			  }
+			catch(e) {;}
+			
+			if(curType.toUpperCase() == 'ITEM')
+			  {
+			    if(curListOb) // a complete item exists
+				  {
+					makeSeparator();
+                    makeItem();				
+				  }
+				  
+				curListOb = new Object();
+				  
+				curListOb.className = 'baseItem';
+				curListOb.elType = 'ITEM';
+				curListOb.elID = curName; // the id of the item
+				curListOb.elCategories = ''; // appended to if item is attached to multiple categories; see below
+			  }  
+			
+			if(curType.toUpperCase() == 'STRING')
+			  {
+                curListOb.elText = curValue;
+			  }
+			  
+			if(curType.toUpperCase() == 'CATEGORY')
+			  {
+				curListOb.elCategories += curValue + '``';
+			  }
+		  }
+		
+		// pick up any latent items
+		if(curListOb) // a complete item exists
+	      {
+		    makeSeparator();
+            makeItem();				
+		  }
+		  
+		document.body.appendChild(container);
+      }
+*/
+
+      function makeContainer()
+	    {
+	      container = document.createElement('div'); // holds the list
+		  container.id = 'columnContainer';
+		
+		  container.style.position = 'absolute';
+		  container.style.top = '30px';
+		  container.style.left = '260px';
+		  container.style.width = '240px';
+	    }
+		
+	  function makeSeparator()
+	    {
+		  // make separator
+	      var sep = document.createElement('img');
+		  sep.id = 'separator' + separatorCount;
+		  
+		  sep.boundItemIndex = separatorCount;
+
+		  sep.className = 'itemSeparator';
+		  sep.src = 'images/dummy.gif';
+		  sep.itemAfter = (itemCount += 2);
+				
+		  sep.onmouseup = function() 
+			{
+			  deactivateSeparator(this); 
+			  dropItem(this.itemAfter); 
+			};
+				
+		  sep.onmouseover = function() { activateSeparator(this); };
+		  sep.onmouseout = function() { deactivateSeparator(this); };
+
+		  sep.ondrag = function()// ie specific event cancel
+			{
+			  try 
+		        {
+				  if(selectedItem)
+					{
+		              window.event.cancelBubble = true;
+		              window.event.returnValue = false;
+					}
+		        } catch(e) {;}
+			}
+			
+		  // attach separator to container;
+		  container.appendChild(sep); 
+		  separatorCount++;
+        }	
+		
+	  function makeItem()
+	    {
+		  var nOb = curListOb; // copy, since we need a unique object;
+				
+		  // insert object into list
+		  var obInd = columnAList.add(nOb);
+					
+          // now build document Item from nOb;
+		  var nEl = document.createElement('div');
+					
+          nEl.className = curListOb.className;
+          nEl.elType = curListOb.elType;
+		  nEl.elID = curListOb.elID;
+		  nEl.elCategories = curListOb.elCategories;
+		  nEl.obRef = obInd-1;
+					
+		  var hnd = document.createElement('div');
+		  hnd.className = 'handle';
+		  
+		  var hndIc = document.createElement('div');
+          hndIc.className = 'fileIcon';
+		  hnd.appendChild(hndIc);
+		  
+		  var hndTxt = document.createTextNode(obInd);
+		  hnd.appendChild(hndTxt);
+		  
+		  nEl.appendChild(hnd);
+		  
+		  var elT = document.createElement('div');
+		  elT.className = 'handleText';
+		  
+		  var elTxt = document.createTextNode(curListOb.elText);	  
+		  elT.appendChild(elTxt);
+		  nEl.appendChild(elT);
+		  
+		  bindItemHandlers(nEl);
+		  
+		  container.appendChild(nEl);
+		}
+		
+	function assignItemAttributes(frm,to)
+	  {
+		var ob = columnAList.get(frm.obRef);
+	    to.className = ob.className;
+        to.elType = ob.elType;
+		to.elID = ob.elID;
+		to.elCategories = ob.elCategories;
+		to.obRef = frm.obRef;
+		to.elText = frm.elText;
+	  }
+	  
+      function bindItemHandlers(el)
+	    {
+		  el.onmousedown = function() { selectItemText(this); }
+		  el.ondblclick = function() { editItemText(this); }
+		  el.firstChild.onmousedown = function() { liftItem(this.parentNode.previousSibling); }
+		}
+		
+		
+		
+		/***********************************
+		**********************************
+		**/
+		
+		
+		
+	function selectItemText(t)
+	  {
+	    if(curItemEditor)
+		  {
+		    // if mousedown on editor proper, do nothing
+	        if(t == curItemEditorParent) { return; } 
+			
+			clearEditor();
+		  }
+	
+	    deselectItemText(); // clear last
+		
+	    curItemSelected = t;
+		curItemSelected.className = 'selectedItem';
+	  }
+	  
+	function deselectItemText()
+	  {
+	    if(curItemSelected)
+		  {
+		    curItemSelected.className = 'baseItem';
+		  }
+	  }
+	
+	function clearEditor()
+	  {
+	    if(curItemEditor)
+		  {
+		    var nT = document.createElement('div');
+		    nT.className = 'handleText';
+		  
+		    var nTxt = document.createTextNode(curItemEditor.value);	  
+		    nT.appendChild(nTxt);
+		  
+			// update itemList value
+			columnAList.get(curItemEditorParent.obRef).elText = curItemEditor.value;
+			
+			
+			// lose edit box
+		    curItemEditorParent.removeChild(curItemEditorParent.lastChild);
+			
+			// add new text
+		    curItemEditorParent.appendChild(nT);
+		    curItemEditor = null;
+			
+			selectItemText(curItemEditorParent);
+			
+		    curItemEditorParent = null;
+		  }
+	  }
+	
+	function editItemText(t)
+	  {
+	    clearEditor();
+	    deselectItemText();
+		  
+	    var dE = document.createElement('textarea');
+		dE.className = 'itemEditBox';
+		
+		dE.ondblclick = clearEditor;
+		dE.value = t.childNodes.item(1).firstChild.nodeValue;
+		
+		// guesstimate height necessary based on container width
+		// and number of characters in box.  Note audacity of kludge.
+		var rows = Math.max(3,Math.ceil(dE.value.length/(parseInt(document.getElementById('columnContainer').style.width)/12)));
+        dE.style.height = rows*17;
+		
+		// very ugly, but strange behaviour from IE
+		if(!System.D_isMoz())
+		  { 
+		    dE.style.width = '86%';
+		  }
+		
+		curItemEditor = dE;
+		curItemEditorParent = t;
+		
+		// lose existing text element
+		t.removeChild(t.lastChild);
+		
+		// replace with text editor
+        t.appendChild(dE);
+		
+		dE.focus();
+		
+		// more IE ugly
+		if(!System.D_isMoz())
+		  {
+		    dE.value += '';
+		  }
+	  }
+		
+	function moveItem()
+	  {
+	    if(selectedItem)
+		  {
+		    selectedItem.style.top = System.D_cursorY() + 6;
+			selectedItem.style.left = System.D_cursorX() - selectedItemOffset;
+			selectedItem.style.visibility = 'visible';
+		  }
+	  }
+	  
+	function removeGhost()
+	  {
+	    if(selectedItem)
+		  {
+		    // get rid of ghost &c
+	        var nde = document.getElementById('itemGhost');
+	        if(System.D_isMoz())
+		      {
+		        nde.parentNode.removeChild(nde);
+		      }
+		    else
+		      {
+		        nde.removeNode(true);
+		      }
+		    selectedItem = null;
+		    selectedItemOffset = 0;
+	      }
+	  }  
+	  
+	function dropItem(itAft)
+	  {
+	    if(selectedItem)
+		  {
+		    // get rid of ghost &c
+	        removeGhost();
+			 			
+	        // since mozilla sends events as arguments automatically, itAft will be an event object instead
+		    // of a number whien dropItem is called on a mouseup from document.mouseup.  so deal with this.
+		    if(itAft && (typeof(itAft) == 'object')) { return; }
+			
+			if(itAft && (startSeparator.itemAfter != itAft)) // if not the same node...
+			  {
+
+			    // now move dragged node to new position  
+		        var containNode = document.getElementById('columnContainer');
+				var cNodes = containNode.childNodes;
+				
+				var start = startSeparator.itemAfter;
+				var end = itAft;
+				var dir = (start < end ) ? 2 : -2;
+				if(dir > 0) { end -= 2; }
+				
+				var origNode = cNodes.item(start).cloneNode(true);
+				assignItemAttributes(cNodes.item(start),origNode);
+				bindItemHandlers(origNode);
+				origNode.className = cNodes.item(start).className;
+				
+				while(start != end)
+				  {
+				    var nextNode = cNodes.item(start + dir).cloneNode(true);	
+				    assignItemAttributes(cNodes.item(start + dir),nextNode);	
+					bindItemHandlers(nextNode);
+					nextNode.className = cNodes.item(start + dir).className;
+						
+					var newNode = containNode.replaceChild(nextNode, cNodes.item(start));
+					start += dir;
+				  }
+				  
+				// now return original node in new place
+				containNode.replaceChild(origNode, cNodes.item(end));
+				
+				selectItemText(origNode);
+				
+				var dd = document.getElementById('attDisplay');
+			  }
+		  }
+	  }
+	  
+	function liftItem(t)
+	  {
+	    clearEditor();
+	    startSeparator = t;
+		
+	    document.getElementById('dumbTarget').focus();
+	    System.D_disableSelect();
+		deselectItemText();
+		
+	    if(selectedItem) { dropItem(); }
+
+		var it = document.getElementById('columnContainer').childNodes.item(startSeparator.itemAfter);		
+		
+		
+		selectedItemOffset = System.D_cursorX() - parseInt(document.getElementById('columnContainer').style.left);
+
+		var itemGhost = document.createElement('DIV');
+		itemGhost.className = 'baseItem';
+		itemGhost.id = 'itemGhost';
+		itemGhost.style.border = '1px black dashed';
+		itemGhost.style.position = 'absolute';
+		itemGhost.style.width = parseInt(document.getElementById('columnContainer').style.width);
+		itemGhost.style.visibility = 'hidden';
+
+		// make clone of item
+		
+		var itCont = document.createElement('div');
+		itCont = it.cloneNode(true);
+		itemGhost.appendChild(itCont);
+		itemGhost.style.zIndex = 2000;
+		
+		selectedItem = document.body.appendChild(itemGhost)
+	  }
+	  
+	function activateSeparator(t)
+	  {  
+	    if(selectedItem && (t != startSeparator))
+		  {
+		    t.style.backgroundImage = 'url(images/separator.gif)';
+		  }
+		curSeparator = t;
+	  }
+	  
+	function deactivateSeparator(t)
+	  {
+	    if(selectedItem)
+		  {
+			t.style.backgroundImage = '';
+		  }
+		curSeparator = null;
+	  }	  
+	  
+	function showInfo()
+	  {
+	    var itm;
+		try
+		  {
+	        itm = curItemSelected || curItemEditorParent;
+		  } catch(e) {;}
+		  
+		if(itm)
+		  {
+		    alert(columnAList.get(itm.obRef).elText);
+		  
+		  }
+	  }  
+	  
+	  
+	var selectedItemOffset = 0;
+	var selectedItem = null;
+	var startSeparator = null;
+	var curSeparator = null;
+	var curItemSelected = null;
+	var curItemEditor = null;
+	var curItemEditorParent = null;
+		  
+	</script>
+	
+	
+</head>
+
+<body onload="init();" style="background-color:#ffffff;">
+
+<div id="backer" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:0;"></div>
+
+<DIV id="attDisplay" STYLE="position:absolute; top:20; left:500; font-family:Lucida,Verdana; font-size:11px; color:red;'"></DIV>
+
+<!-- dummy focus -->
+<input type="text" id="dumbTarget" style="position:absolute; top:0px; left:0px; width:0px; height:0px; border:0px; padding:0px; margin:0px; z-index:0;">
+
+</body>
+</html>
